@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Analysis Chatbot - Upload</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>PDF Upload</h2>
+        <input type="file" id="pdfFile" accept=".pdf" multiple>
+        <button id="uploadBtn">Upload</button>
+        <button id="gotoQAPage" onclick="gotoQAPage()">Go to Q&A</button>
+    </div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal()" style="float: right; cursor: pointer;">&times;</span>
+            <p id="modalMessage">Loading File...</p>
+        </div>
+    </div>
+    <script>
+        
+
+    </script>
+    <script>
+        const pdfFileInput = document.getElementById("pdfFile");
+        const uploadBtn = document.getElementById("uploadBtn");
+        var modal = document.getElementById('myModal');
+        var modalMessage = document.getElementById('modalMessage');
+        
+        function gotoQAPage() {
+            window.location.href = "qa.html";
+        }
+        
+        window.uploadedFiles = []
+        pdfFileInput.addEventListener('change', function () {
+            // Get the selected file list
+            var files = pdfFileInput.files;
+
+            // Store file objects for later upload
+            window.uploadedFiles = files;
+        });
+
+        // Event listener for uploading PDFs
+        uploadBtn.addEventListener('click', function () {
+            // Create a FormData object to send files to the server
+            var formData = new FormData();
+
+            // Add files to the FormData object
+            for (var i = 0; i < window.uploadedFiles.length; i++) {
+                formData.append('pdfFiles', window.uploadedFiles[i]);
+            }
+
+            modalMessage.textContent = 'Loading File...';
+            modal.style.display = 'block';
+
+            // Send the FormData object to the server
+            fetch('http://127.0.0.1:5000/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data['message']);
+                modalMessage.textContent = data['message'];
+            })
+            .catch(error => {
+                console.error('Upload Error:', error);
+                modalMessage.textContent = 'Upload Error';
+            });
+        });
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+    </script>
+</body>
+</html>

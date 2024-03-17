@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Analysis Chatbot - Q&A</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+	.chat-history
+	{
+		background-image:url('../data/material.jpg');
+		background-size: cover;
+	}
+    </style>
+</head>
+<body>
+    <header class="chatbot-header">
+        <h1 class="header-title">
+            <img src="../data/ChefMate.jpg" width="300", height="100">
+        </h1>
+        <div class="button-container">
+		<button id="gotoUploadPage" onclick="gotoUploadPage()">Upload PDF</button>
+		<button id="gotoUploadImage" onclick="gotoUploadImage()">Upload Image</button>
+		<input type="file" id="imageInput" name="image" accept="image/*" style="display: none;" onchange="uploadImage()">
+        </div>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-history" id="chatHistory">
+
+        </div>
+        <div class="user-input">
+            <input type="text" id="userMessage" placeholder="Ask a question..." onkeypress="handleKeyPress(event)">
+            <button id="sendMessage">Send</button>
+        </div>
+    </div>
+    
+    <script>
+    	
+    	var id  = get('user',5*60)
+    	
+    	if (id == null){
+    		window.location.href = "login.html";
+    	}
+    	
+        const userMessageInput = document.getElementById("userMessage");
+        const sendMessageBtn = document.getElementById("sendMessage");
+        const chatHistory = document.getElementById("chatHistory");
+        
+        function gotoUploadPage() {
+        	window.location.href = "upload.html";
+        }
+
+        // Event listener for sending user messages
+        sendMessageBtn.addEventListener("click", sendMessage);
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const question = userMessageInput.value;
+            if (question.trim() === "") return;
+
+            // Display the user's message in the chat history
+            appendMessage("You", question);
+
+            fetch('http://127.0.0.1:5000/get_answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                	question: question,
+                	id: id,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the chatbot's response in the chat history
+                console.log(data['picture']);
+                appendMessage("Chatbot", data['answer'], data['picture']);
+            })
+            .catch(error => console.error('Error:', error));
+
+            // Clear the user input field
+            userMessageInput.value = "";
+        }
+
+        function appendMessage(sender, message, imageUrl) {
+            const messageElement = document.createElement("div");
+            const avatarElement = document.createElement("img");
+            avatarElement.classList.add("avatar");
+            const text = document.createElement("div");
+            if (sender == 'You'){
+                messageElement.classList.add("message", "user");
+                avatarElement.src = '../data/User.jpg'
+                text.classList.add("text");
+            }
+            else{
+                messageElement.classList.add("message", "chatbot");
+                avatarElement.src = '../data/Chatbot.jpg'
+                text.classList.add("text");
+            }
+            text.innerText = `${message}`;
+            
+            if (imageUrl) {
+		const imageElement = document.createElement("img");
+		imageElement.src = imageUrl;
+		text.appendChild(document.createElement("br"));
+		text.appendChild(imageElement);
+	    }
+            
+            if (sender == 'You'){
+                messageElement.appendChild(text);
+                messageElement.appendChild(avatarElement)
+            }
+            else{
+                messageElement.appendChild(avatarElement)
+                messageElement.appendChild(text);
+            }
+            
+            chatHistory.appendChild(messageElement);
+        }
+        
+        function gotoUploadImage() {
+        	document.getElementById('imageInput').click();
+	}
+
+	function uploadImage() {
+		var formData = new FormData();
+		var imageFile = document.getElementById('imageInput').files[0];
+		formData.append("image", imageFile);
+
+		fetch('http://127.0.0.1:5000/upload_Image', {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(data => {
+			alert(data['message'])
+			appendMessage('You','','src/image/'+data['image'])
+			getImageRecipe('image/'+data['image'])
+		})
+		.catch(error => console.error('Error:', error));
+	} 
+	
+	
+	function getImageRecipe(image) {
+        	console.log(image);
+        	fetch('http://127.0.0.1:5000/getImageRecipe', {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image }),
+		})
+		.then(response => response.json())
+		.then(data => {
+		// Display the chatbot's response in the chat history
+		console.log(data['picture']);
+		appendMessage("Chatbot", data['answer'], data['picture']);
+		})
+		.catch(error => console.error('Error:', error));
+        	
+	}
+	
+	
+	function get(key,exp){
+		var val = localStorage.getItem(key);//Get stored elements
+		var dataobj = JSON.parse(val);//Parse out JSON objects
+		
+		if(new Date().getTime() - dataobj.time > exp*1000){
+			console.log("expires");//Prompt for expiration
+			return null
+		}
+		else{
+			return dataobj.val
+		}
+	}
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <style>
+    /* Center the form on the page */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f2f2f2;
+    }
+
+    /* Style the form */
+    form {
+      width: 400px;
+      padding: 30px;
+      background-color: #fff;
+      border-radius: 5px;
+      text-align: center;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Style the form inputs and labels */
+    label, select,div, #email{
+      display: block;
+      margin-bottom: 10px;
+      text-align: left;
+      width: 100%;
+    }
+
+    #password{
+      display: inline-block;
+      width: 88%;
+
+    }
+    #Icon{
+      display: inline-block;
+      width: 8%;
+
+    }
+
+    /* Style the form submit button */
+    button[type="submit"] {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+  <link href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+
+</head>
+<body>
+  <form id="signupForm">
+    <h1>Login</h1>
+    <label for="email">User Name:</label>
+    <input type="email" id="email" name="email" required>
+    <label for="password">Password:</label>
+    <div>
+      <input type="password" id="password" name="password" required>
+      <button type="button" onclick="showHidePassword()", id = 'Icon'><i class="mdi mdi-eye"></i></button>
+    </div>
+    
+    <button type="submit" id="register">Login</button>
+    
+    <!-- Sign up link -->
+    <p class="signup_link">Don't have an account? <a href="signup.html">Sign up</a></p>
+  </form>
+
+  <script type="text/javascript">
+  
+	              
+	
+        const registerBtn = document.getElementById("register");
+        
+	registerBtn.addEventListener("click", register);
+
+        
+	function register() {
+		const username = document.getElementById('email').value;
+		const password = document.getElementById('password').value;  
+
+		
+		fetch('http://127.0.0.1:5000/login', {
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		        },
+		        body: JSON.stringify({ 
+		        
+				username: username,
+				password: password,
+		        }),
+            	})
+            	.then(response => response.json())
+		.then(data => {
+			state = data.state
+			if (state){
+				user = data['id']
+				set('user',user);
+				alert('Welcome '+data['name']);
+				window.location.href = 'Q&A.html';
+			}
+			else{
+				alert(data['message']);
+			}
+			
+		})
+		.catch(function (error) {
+			console.error('Registration error:', error);
+
+		});
+		  
+
+
+	};
+	function showHidePassword() {
+		var passwordInput = document.getElementById("password");
+		var buttonIcon = document.querySelector("#password + button i");
+		if(passwordInput.type === "password") {
+			passwordInput.type = "text";
+			buttonIcon.classList.remove("mdi-eye");
+			buttonIcon.classList.add("mdi-eye-off");
+		} else {
+			passwordInput.type = "password";
+			buttonIcon.classList.remove("mdi-eye-off");
+			buttonIcon.classList.add("mdi-eye");
+		}
+	}
+	
+	
+	function set(key,value){
+		var curtime = new Date().getTime();
+		localStorage.setItem(key,JSON.stringify({val:value,time:curtime}));
+	}
+	function get(key,exp){
+		var val = localStorage.getItem(key);//Get stored elements
+		var dataobj = JSON.parse(val);//Parse out JSON objects
+		if(new Date().getTime() - dataobj.time > exp*1000){
+			console.log("expires");//Prompt for expiration
+		}
+		else{
+			console.log("val="+dataobj.val);
+		}
+	}
+  </script>
+  
+
+</body>
+</html>
+
+
+
+
